@@ -30,7 +30,7 @@ def crear_frame_inventario(root, frame_mostrar_inventario):
 
     # Variables
     unidad_var = tk.StringVar(value="Selecciona tu unidad")
-    opciones_unidad = ["Kilogramos", "Gramos", "Unidades"]
+    opciones_unidad = ["Kilogramos", "Metros", "Unidades"]
 
     # Variable para el campo de nombre y función para transformar a mayúsculas
     nombre_var = tk.StringVar()
@@ -122,7 +122,11 @@ def agregar_producto(entry_nombre, entry_cantidad, entry_precio, unidad_var, pro
 
     try:
         # Convertir cantidad y precio a valores numéricos
-        cantidad = float(cantidad)
+        if unidad == "Metros":
+            cantidad = round(float(cantidad),2)
+        else:
+            cantidad = round(float(cantidad),3)
+
         precio = round(float(precio), 2)
 
         # Verificar que cantidad y precio sean positivos
@@ -132,6 +136,10 @@ def agregar_producto(entry_nombre, entry_cantidad, entry_precio, unidad_var, pro
 
         if precio <= 0:
             messagebox.showerror("Error", "El precio debe ser un monto positivo.")
+            return
+
+        if cantidad % 1 != 0 and unidad=="Unidades" :
+            messagebox.showerror("Error", "No se admiten valores decimales para unidad de medida: Unidades.");
             return
 
         # Verificar si el producto ya existe en la base de datos

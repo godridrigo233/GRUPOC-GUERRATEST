@@ -223,7 +223,7 @@ def abrir_ventana_editar_producto(producto_id):
 
     tk.Label(ventana_editar, text="UNIDAD", font=("Arial", 15, "bold"), bg="white").grid(row=3, column=0, sticky="e", padx=10, pady=5)
     unidad_var = tk.StringVar(value=unidad_actual)
-    opciones_unidad = ["Kilogramos", "Gramos", "Unidades"]
+    opciones_unidad = ["Kilogramos", "Metros", "Unidades"]
 
     # Evitar duplicados en las opciones del menú desplegable
     if unidad_actual not in opciones_unidad:
@@ -257,7 +257,11 @@ def abrir_ventana_editar_producto(producto_id):
 
         try:
             # Validar que sean números
-            nueva_cantidad = float(nueva_cantidad)
+            if nueva_unidad == "Metros":
+                nueva_cantidad = round(float(nueva_cantidad),2)
+            else:
+                nueva_cantidad = round(float(nueva_cantidad),3)
+        
             nuevo_precio = round(float(nuevo_precio), 2)
 
             # Validar que sean positivos
@@ -269,6 +273,10 @@ def abrir_ventana_editar_producto(producto_id):
             if nuevo_precio <= 0:
                 messagebox.showerror("Error", "El precio debe ser un monto positivo.")
                 ventana_editar.lift()
+                return
+            
+            if nueva_cantidad % 1 != 0 and nueva_unidad=="Unidades" :
+                messagebox.showerror("Error", "No se admiten valores decimales para unidad de medida: Unidades.");
                 return
 
             # Actualizar el producto en la base de datos
