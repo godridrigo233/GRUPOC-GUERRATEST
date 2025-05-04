@@ -45,11 +45,11 @@ def crear_frame_mostrar_inventario(root):
     entry_busqueda = tk.Entry(busqueda_frame, width=30, font=("Arial", 16))
     entry_busqueda.pack(side="left", padx=10, pady=10)
 
-    # Vincular el evento de búsqueda en tiempo real
-    entry_busqueda.bind("<KeyRelease>", lambda event: buscar_producto(entry_busqueda, treeview))
+    # Ejecutar búsqueda al presionar Enter
+    entry_busqueda.bind("<Return>", lambda event: buscar_producto(entry_busqueda, treeview))
 
     # Botón de búsqueda con ícono de lupa
-    ruta_lupa = os.path.join(ruta_directorio, 'lupa.png')  # Ruta del icono de lupa
+    ruta_lupa = os.path.join(ruta_directorio, 'lupa.png')
     if os.path.exists(ruta_lupa):
         lupa_image = Image.open(ruta_lupa)
         lupa_image = lupa_image.resize((30, 30), Image.LANCZOS)
@@ -184,6 +184,9 @@ def abrir_ventana_editar_producto(producto_id):
     ventana_editar = Toplevel()
     ventana_editar.title("EDITAR PRODUCTO")
     ventana_editar.configure(bg="white")
+    # Establecer el ícono personalizado
+    ruta_icono = os.path.join(ruta_directorio, 'icono_empresa.ico')
+    ventana_editar.iconbitmap(ruta_icono)
 
     # Centrando la ventana en la pantalla
     window_width = 540
@@ -241,35 +244,48 @@ def abrir_ventana_editar_producto(producto_id):
 
     # Función para guardar los cambios
     def guardar_cambios():
-        nuevo_nombre = entry_nombre.get()
-        nueva_cantidad = entry_cantidad.get()
+        nuevo_nombre = entry_nombre.get().strip()
+        nueva_cantidad = entry_cantidad.get().strip()
         nueva_unidad = unidad_var.get()
-        nuevo_precio = entry_precio.get()
+        nuevo_precio = entry_precio.get().strip()
 
+        # Verificar campos obligatorios
         if not nuevo_nombre or not nueva_cantidad or not nuevo_precio:
             messagebox.showerror("Error", "Todos los campos son obligatorios.")
-            # Traer la ventana de edición al frente
             ventana_editar.lift()
             return
 
         try:
+            # Validar que sean números
             nueva_cantidad = float(nueva_cantidad)
-            nuevo_precio = float(nuevo_precio)
+            nuevo_precio = round(float(nuevo_precio), 2)
+
+            # Validar que sean positivos
+            if nueva_cantidad <= 0:
+                messagebox.showerror("Error", "La cantidad debe ser un monto positivo.")
+                ventana_editar.lift()
+                return
+
+            if nuevo_precio <= 0:
+                messagebox.showerror("Error", "El precio debe ser un monto positivo.")
+                ventana_editar.lift()
+                return
 
             # Actualizar el producto en la base de datos
-            cursor.execute('''UPDATE productos SET nombre=?, cantidad=?, precio=?, unidad=? WHERE id=?''',
-                        (nuevo_nombre, nueva_cantidad, nuevo_precio, nueva_unidad, producto_id))
+            cursor.execute('''
+                UPDATE productos 
+                SET nombre=?, cantidad=?, precio=?, unidad=? 
+                WHERE id=?
+            ''', (nuevo_nombre, nueva_cantidad, nuevo_precio, nueva_unidad, producto_id))
             conn.commit()
 
-            # Cerrar la ventana de edición y mostrar mensaje solo si no hay errores
             cerrar_ventana_editar()
             messagebox.showinfo("Éxito", "Producto actualizado correctamente.")
-            actualizar_frame_inventario()  # Actualizar el inventario
+            actualizar_frame_inventario()
 
         except ValueError:
-            # Mostrar mensaje de error, mantener la ventana abierta y traerla al frente
-            messagebox.showerror("Error", "Cantidad y precio deben ser números.")
-            ventana_editar.lift()  # Traer la ventana al frente
+            messagebox.showerror("Error", "Cantidad y precio deben ser números válidos.")
+            ventana_editar.lift()
 
     # Al abrir la ventana de edición, asegúrate de traerla al frente
     ventana_editar.lift()
@@ -277,7 +293,7 @@ def abrir_ventana_editar_producto(producto_id):
     # Botón para guardar los cambios
     btn_guardar = tk.Button(
         ventana_editar, 
-        text="Guardar cambios", 
+        text="💾 Guardar cambios",
         command=guardar_cambios, 
         bg="#4CAF50",  # Fondo verde
         fg="white",    # Texto blanco
@@ -302,7 +318,7 @@ def abrir_ventana_editar_producto(producto_id):
     # Botón para eliminar el producto
     btn_eliminar = tk.Button(
         ventana_editar, 
-        text="Eliminar producto", 
+        text="🗑️Eliminar producto",
         command=eliminar_producto, 
         bg="#FF5733",  # Fondo rojo
         fg="white",    # Texto blanco
@@ -310,8 +326,17 @@ def abrir_ventana_editar_producto(producto_id):
     )
     btn_eliminar.grid(row=7, column=0, columnspan=2, padx=20, pady=(10, 20), sticky="ew")
 
-    # Configurar el cierre de la ventana
-    ventana_editar.protocol("WM_DELETE_WINDOW", cerrar_ventana_editar)
+    # Verificación periódica de foco (mejor que <FocusOut>)
+    def verificar_foco():
+        if ventana_editar.focus_displayof() is None:
+            ventana_editar.lift()      # Trae la ventana al frente
+            ventana_editar.focus_set()
+    verificar_foco()  # Inicia la verificación
+
+    # Hacer la ventana modal (bloquea el resto de la app)
+    ventana_editar.grab_set()
+    ventana_editar.focus_set()
+    ventana_editar.wait_window()
 
 # Función para cerrar la ventana de edición
 def cerrar_ventana_editar():
@@ -322,8 +347,12 @@ def cerrar_ventana_editar():
 
 # Función para seleccionar el producto y abrir la ventana de edición
 def seleccionar_producto(event):
-    selected_item = treeview.selection()
-    if selected_item:
-        item = treeview.item(selected_item)
+    # Obtener la fila donde se hizo clic (si existe)
+    item_id = treeview.identify_row(event.y)
+
+    if item_id:  # Solo si se hizo clic sobre una fila válida
+        item = treeview.item(item_id)
         producto_id = item['values'][0]  # El ID está en la primera columna
         abrir_ventana_editar_producto(producto_id)
+    
+

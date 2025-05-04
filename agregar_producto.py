@@ -104,7 +104,6 @@ def actualizar_lista_productos(productos_list):
     for producto in cursor.fetchall():
         productos_list.insert(tk.END, f"{producto[0]} - Cantidad: {producto[1]} - Precio: {producto[2]:.2f} - Unidad: {producto[3]}")
 
-# Función para agregar un producto
 def agregar_producto(entry_nombre, entry_cantidad, entry_precio, unidad_var, productos_list, frame_mostrar_inventario, mensaje_label):
     nombre = entry_nombre.get().strip()
     cantidad = entry_cantidad.get().strip()
@@ -123,8 +122,17 @@ def agregar_producto(entry_nombre, entry_cantidad, entry_precio, unidad_var, pro
 
     try:
         # Convertir cantidad y precio a valores numéricos
-        cantidad = float(cantidad)  # Permitir decimales en cantidad
+        cantidad = float(cantidad)
         precio = round(float(precio), 2)
+
+        # Verificar que cantidad y precio sean positivos
+        if cantidad <= 0:
+            messagebox.showerror("Error", "La cantidad debe ser un monto positivo.")
+            return
+
+        if precio <= 0:
+            messagebox.showerror("Error", "El precio debe ser un monto positivo.")
+            return
 
         # Verificar si el producto ya existe en la base de datos
         cursor.execute('''SELECT COUNT(*) FROM productos WHERE nombre = ?''', (nombre,))
@@ -142,7 +150,7 @@ def agregar_producto(entry_nombre, entry_cantidad, entry_precio, unidad_var, pro
 
         # Mostrar mensaje temporal de éxito
         mensaje_label.config(text="¡Producto agregado!", bg="green", fg="white", font=("Arial", 35, "bold"))
-        mensaje_label.after(3200, lambda: mensaje_label.config(text="", bg="white"))  # Borrar el mensaje después de 3.2 segundos
+        mensaje_label.after(3200, lambda: mensaje_label.config(text="", bg="white"))
 
         # Limpiar los campos después de agregar el producto
         entry_nombre.delete(0, tk.END)
@@ -152,7 +160,7 @@ def agregar_producto(entry_nombre, entry_cantidad, entry_precio, unidad_var, pro
         
     except ValueError:
         messagebox.showerror("Error", "Cantidad y precio deben ser números.")
-        
+
 # Función para configurar el botón "Volver"
 def configurar_boton_volver(frame_inventario, comando_volver):
     btn_volver = tk.Button(frame_inventario, text="Volver al menú principal", command=comando_volver, width=25, height=3, font=("Arial", 12), bg="red", fg="white")

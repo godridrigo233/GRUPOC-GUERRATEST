@@ -60,22 +60,13 @@ def volver_menu_principal():
 def retroceder():
     volver_menu_principal()  # Vuelve al menú principal
 
-# Función para avanzar
-def avanzar():
-    abrir_inventario()  # Avanza a la gestión de inventario
 
-# Configurar los botones de flechas con caracteres
-btn_retroceder = tk.Button(root, text="⬅", command=retroceder, font=("Arial", 35), borderwidth=0, bg="white")
-btn_avanzar = tk.Button(root, text="➡", command=avanzar, font=("Arial", 35), borderwidth=0, bg="white")
+# Configurar los botones
+btn_home = tk.Button(root, text="🏠", command=retroceder, font=("Arial", 40), borderwidth=0, bg="white")
 
-# Posicionar los botones de flecha en la esquina superior izquierda
-btn_retroceder.place(x=10, y=10)
-btn_avanzar.place(x=90, y=10)
-
-# Posicionar los botones de flecha en la esquina superior izquierda
-btn_retroceder.place(x=10, y=10)
-btn_avanzar.place(x=90, y=10)
-
+btn_home.place(x=10, y=10)
+btn_home.bind("<Enter>", lambda e: btn_home.config(bg="lightgray"))
+btn_home.bind("<Leave>", lambda e: btn_home.config(bg="white"))
 # Logo
 ruta_logo = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'logo.png')
 if os.path.exists(ruta_logo):
@@ -91,8 +82,8 @@ titulo = tk.Label(frame_menu, text="FERRETERIA-RUPHA", bg="white", font=("Arial"
 titulo.pack(pady=10)
 
 # Frame para contener los botones
-botones_frame = tk.Frame(frame_menu, bg="white")  # Fondo blanco opcional para el contenedor
-botones_frame.pack(pady=15)  # Ajusta este padding para centrar el frame de los botones en el menú
+botones_frame = tk.Frame(frame_menu, bg="white")  
+botones_frame.pack(pady=15)  
 
 # Botón para agregar producto
 btn_gestionar_inventario = tk.Button(botones_frame, text="Agregar nuevo producto", command=abrir_inventario, width=29, height=4, font=("Arial", 20, "bold"), bg="black", fg="white")

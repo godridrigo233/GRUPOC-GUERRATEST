@@ -44,31 +44,76 @@ def crear_frame_reporte(root):
     espaciador = tk.Label(frame_reporte, bg="white")
     espaciador.pack(pady=50)  # Ajusta el valor para obtener la distancia deseada
     
-    # Botón para descargar en Excel
+    # Cargar el ícono de Excel
+    ruta_icono_excel = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'excel.png')
+    if os.path.exists(ruta_icono_excel):
+        try:
+            icono_excel_img = Image.open(ruta_icono_excel)
+            icono_excel_img = icono_excel_img.resize((80, 80), Image.LANCZOS)  # Cambia el tamaño según sea necesario
+            icono_excel = ImageTk.PhotoImage(icono_excel_img)
+        except Exception as e:
+            print(f"Error al cargar el icono de Excel: {e}")
+            icono_excel = None
+    else:
+        print("No se encontró el ícono de Excel.")
+        icono_excel = None
+
     btn_descargar_excel = tk.Button(
-        frame_reporte, 
-        text="Descargar Excel", 
-        command=descargar_reporte_excel, 
-        font=("Arial", 20),  # Aumenta el tamaño de la fuente
-        width=20,  # Aumenta el ancho
-        height=2,  # Aumenta la altura
-        bg="green", 
-        fg="white"
+        frame_reporte,
+        text="Descargar Excel",
+        image=icono_excel if icono_excel else None,
+        compound="top",
+        command=descargar_reporte_excel,
+        font=("Arial", 20, "bold"),  # ⬆️ Texto más grande y negrita
+        padx=20,     # ⬅️ espacio horizontal interno
+        pady=20,     # ⬆️ espacio vertical interno
+        bg="#1e7145",
+        fg="white",
+        bd=0,
+        relief="flat",
+        highlightthickness=0,
+        activebackground="#155e38"
     )
-    btn_descargar_excel.pack(pady=10)
+    if icono_excel:
+        btn_descargar_excel.image = icono_excel
+    btn_descargar_excel.pack(pady=20)
     
-    # Botón para descargar en PDF
+        # Cargar el ícono de PDF
+    ruta_icono_pdf = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'pdf.png')
+    if os.path.exists(ruta_icono_pdf):
+        try:
+            icono_pdf_img = Image.open(ruta_icono_pdf)
+            icono_pdf_img = icono_pdf_img.resize((80, 80), Image.LANCZOS)
+            icono_pdf = ImageTk.PhotoImage(icono_pdf_img)
+        except Exception as e:
+            print(f"Error al cargar el icono de PDF: {e}")
+            icono_pdf = None
+    else:
+        print("No se encontró el ícono de PDF.")
+        icono_pdf = None
+
+    # Botón para descargar en PDF con diseño moderno
     btn_descargar_pdf = tk.Button(
         frame_reporte, 
         text="Descargar PDF", 
+        image=icono_pdf if icono_pdf else None,
+        compound="top",  # Ícono encima del texto
         command=descargar_reporte_pdf, 
-        font=("Arial", 20),  # Aumenta el tamaño de la fuente
-        width=20,  # ancho
-        height=2,  # altura
-        bg="black", 
-        fg="white"
+        font=("Arial", 20, "bold"),
+        padx=20,
+        pady=20,
+        bg="#C62828",
+        fg="black",
+        bd=0,
+        relief="flat",
+        highlightthickness=0,
+        activebackground="#AD1C1C"
     )
-    btn_descargar_pdf.pack(pady=10)
+    if icono_pdf:
+        btn_descargar_pdf.image = icono_pdf  # mantener referencia
+
+    btn_descargar_pdf.pack(pady=20)
+
     # Retorna el frame creado
     return frame_reporte
 
