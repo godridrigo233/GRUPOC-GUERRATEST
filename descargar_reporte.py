@@ -246,24 +246,70 @@ def descargar_reporte_pdf():
     pdf.set_text_color(0, 0, 0)  # Restablece el color a negro para el resto del contenido
     pdf.ln(10)
 
-    # Encabezado de la tabla
+    # Ajustes para tabla
     pdf.set_font("Arial", "B", 12)
-    col_width = 30  # Ancho de cada columna, puedes ajustarlo según sea necesario
-    table_start_x = (pdf.w - (col_width * len(columnas))) / 2  # Calcula la posición inicial de la tabla para centrarla
+    max_table_width = 180
+    col_width = max_table_width / len(columnas)
+    table_start_x = (pdf.w - max_table_width) / 2
 
-    # Dibujar encabezado de la tabla
-    pdf.set_x(table_start_x)
-    for col in columnas:
-        pdf.cell(col_width, 10, col, border=1, align="C")
-    pdf.ln()
+    # Función auxiliar para calcular alto estimado de una celda
+    def get_cell_height(texto, col_width, font_size):
+        avg_char_per_line = col_width // (font_size * 0.4)
+        num_lines = max(1, int(len(str(texto)) / avg_char_per_line) + 1)
+        return num_lines * (font_size + 2)
 
-    # Agregar filas de datos
+    # Encabezados
+    pdf.set_xy(table_start_x, pdf.get_y())
+    y_encabezado = pdf.get_y()
+    max_header_height = 0
+
+    for i, col in enumerate(columnas):
+        texto = str(col)
+        x = table_start_x + i * col_width
+        y = y_encabezado
+        pdf.set_xy(x, y)
+        pdf.multi_cell(col_width, 6, texto, border=1, align="C")
+        cell_height = get_cell_height(texto, col_width, 10)
+        max_header_height = max(max_header_height, cell_height)
+
+    pdf.set_y(y_encabezado + max_header_height)
+
+    # Cambiar fuente para los datos
     pdf.set_font("Arial", "", 10)
-    for producto in productos:
-        pdf.set_x(table_start_x)  # Asegura que cada fila comience en la posición centrada
-        for item in producto:
-            pdf.cell(col_width, 10, str(item), border=1, align="C")
-        pdf.ln()
+
+    # Dibujar cada fila
+    for fila in productos:
+        y_start = pdf.get_y()
+        cell_heights = []
+
+        # Calcular la altura que cada celda ocuparía
+        for i, item in enumerate(fila):
+            texto = str(item)
+            height = get_cell_height(texto, col_width, 10)
+            cell_heights.append(height)
+
+        max_row_height = max(cell_heights)
+
+        for i, item in enumerate(fila):
+            texto = str(item)
+            x = table_start_x + i * col_width
+            y = y_start
+
+            # Guardar la posición actual
+            pdf.set_xy(x, y)
+
+            # Dibujar el texto sin borde
+            pdf.multi_cell(col_width, 6, texto, border=0, align="C")
+
+            # Dibujar el borde de la celda completo
+            pdf.rect(x, y, col_width, max_row_height)
+
+            # Restaurar X para siguiente celda
+            pdf.set_xy(x + col_width, y)
+
+        # Bajar al siguiente Y después de procesar toda la fila
+        pdf.set_y(y_start + max_row_height)
+
 
     # Guardar el archivo PDF
     try:
