@@ -114,6 +114,7 @@ def agregar_producto(entry_nombre, entry_cantidad, entry_precio, unidad_var, pro
     if not nombre or not cantidad or not precio:
         messagebox.showerror("Error", "Todos los campos son obligatorios.")
         return
+
     # Validación nueva: nombre no debe exceder los 31 caracteres
     if len(nombre) > 31:
         messagebox.showerror("Error", "El nombre no debe exceder los 31 caracteres.")
@@ -127,9 +128,9 @@ def agregar_producto(entry_nombre, entry_cantidad, entry_precio, unidad_var, pro
     try:
         # Convertir cantidad y precio a valores numéricos
         if unidad == "Metros":
-            cantidad = round(float(cantidad),2)
+            cantidad = round(float(cantidad), 2)
         else:
-            cantidad = round(float(cantidad),3)
+            cantidad = round(float(cantidad), 3)
 
         precio = round(float(precio), 2)
 
@@ -142,8 +143,19 @@ def agregar_producto(entry_nombre, entry_cantidad, entry_precio, unidad_var, pro
             messagebox.showerror("Error", "El precio debe ser un monto positivo.")
             return
 
-        if cantidad % 1 != 0 and unidad=="Unidades" :
-            messagebox.showerror("Error", "No se admiten valores decimales para unidad de medida: Unidades.");
+        # Nueva validación: cantidad no debe ser mayor a 1000
+        if cantidad > 1000:
+            messagebox.showerror("Error", "La cantidad no puede ser mayor a 1000.")
+            return
+
+        # Nueva validación: precio no debe ser mayor a 1000
+        if precio > 1000:
+            messagebox.showerror("Error", "El precio no puede ser mayor a 1000.")
+            return
+
+        # Validar decimales para unidades
+        if cantidad % 1 != 0 and unidad == "Unidades":
+            messagebox.showerror("Error", "No se admiten valores decimales para unidad de medida: Unidades.")
             return
 
         # Verificar si el producto ya existe en la base de datos
@@ -169,9 +181,10 @@ def agregar_producto(entry_nombre, entry_cantidad, entry_precio, unidad_var, pro
         entry_cantidad.delete(0, tk.END)
         entry_precio.delete(0, tk.END)
         unidad_var.set("Selecciona tu unidad")
-        
+
     except ValueError:
         messagebox.showerror("Error", "Cantidad y precio deben ser números.")
+
 
 # Función para configurar el botón "Volver"
 def configurar_boton_volver(frame_inventario, comando_volver):
