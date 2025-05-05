@@ -114,6 +114,10 @@ def agregar_producto(entry_nombre, entry_cantidad, entry_precio, unidad_var, pro
     if not nombre or not cantidad or not precio:
         messagebox.showerror("Error", "Todos los campos son obligatorios.")
         return
+    # Validación nueva: nombre no debe exceder los 31 caracteres
+    if len(nombre) > 31:
+        messagebox.showerror("Error", "El nombre no debe exceder los 31 caracteres.")
+        return
 
     # Verificar si se ha seleccionado una unidad válida
     if unidad == "Selecciona tu unidad":

@@ -254,6 +254,11 @@ def abrir_ventana_editar_producto(producto_id):
             messagebox.showerror("Error", "Todos los campos son obligatorios.")
             ventana_editar.lift()
             return
+        # Validación nueva: nombre no debe exceder los 31 caracteres
+        if len(nuevo_nombre) > 31:
+            messagebox.showerror("Error", "El nombre no debe exceder los 31 caracteres.")
+            ventana_editar.lift()
+            return
 
         try:
             # Validar que sean números

@@ -131,105 +131,129 @@ def get_database_path():
     return os.path.join(base_path, "ferreteria.db")
 
 def descargar_reporte_excel():
-    # Conexión a la base de datos usando la ruta obtenida
+    # Conexión a la base de datos
     db_path = get_database_path()
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
-    
-    # Obtener datos de la tabla 'productos'
-    cursor.execute("SELECT * FROM productos")
-    productos = cursor.fetchall()
-    columnas = [desc[0] for desc in cursor.description]
-    conn.close()
-    
+
+    # Validar existencia de la tabla 'productos'
+    cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='productos'")
+    if not cursor.fetchone():
+        conn.close()
+        messagebox.showerror("Error", "La tabla 'productos' no existe en la base de datos.")
+        return
+
+    # Obtener datos de la tabla
+    try:
+        cursor.execute("SELECT * FROM productos")
+        productos = cursor.fetchall()
+        conn.close()
+    except Exception as e:
+        conn.close()
+        messagebox.showerror("Error al consultar", str(e))
+        return
+
     if not productos:
         messagebox.showinfo("Sin datos", "No hay registros en la base de datos para exportar.")
         return
 
-    df = pd.DataFrame(productos, columns=columnas)
+    # Reconstruir columnas en orden deseado: ID, Nombre, Cantidad, Unidad, Precio
+    columnas = ["ID", "Nombre", "Cantidad", "Unidad", "Precio"]
+    data_ordenada = []
+    for fila in productos:
+        id_ = fila[0]
+        nombre = fila[1]
+        cantidad = fila[2]
+        precio = round(fila[3], 2)  # Formatear a dos decimales
+        unidad = fila[4]
+        data_ordenada.append([id_, nombre, cantidad, unidad, precio])
 
-    # Crear la carpeta "Reporte" si no existe
+    df = pd.DataFrame(data_ordenada, columns=columnas)
+
+    # Crear carpeta si no existe
     ruta_carpeta_reporte = os.path.join(os.path.dirname(os.path.abspath(__file__)), "Reporte")
     os.makedirs(ruta_carpeta_reporte, exist_ok=True)
 
-    # Generar nombre de archivo con fecha y hora
+    # Nombre de archivo con fecha y hora
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     ruta_reporte = os.path.join(ruta_carpeta_reporte, f"Reporte_Inventario-{timestamp}.xlsx")
-    
-    # Guardar el DataFrame en el archivo Excel
+
+    # Exportar a Excel
     df.to_excel(ruta_reporte, index=False)
 
-    # Abrir el archivo Excel y ajustar el ancho de columnas
+    # Ajustes de formato con openpyxl
     wb = load_workbook(ruta_reporte)
     ws = wb.active
 
-    # Ajustar ancho de columnas
+    # Ajustar ancho automático
     for column in ws.columns:
-        max_length = max(len(str(cell.value)) for cell in column)
+        max_length = max(len(str(cell.value)) if cell.value is not None else 0 for cell in column)
         column_letter = column[0].column_letter
         ws.column_dimensions[column_letter].width = max_length + 2
 
-    # Definir estilo de borde
-    thin_border = Border(left=Side(style='thin'), 
-                         right=Side(style='thin'), 
-                         top=Side(style='thin'), 
-                         bottom=Side(style='thin'))
+    # Bordes finos para todas las celdas
+    thin_border = Border(
+        left=Side(style='thin'),
+        right=Side(style='thin'),
+        top=Side(style='thin'),
+        bottom=Side(style='thin')
+    )
 
-    # Aplicar el borde a todas las celdas con datos
     for row in ws.iter_rows(min_row=1, max_row=ws.max_row, min_col=1, max_col=ws.max_column):
         for cell in row:
             cell.border = thin_border
 
-    # Guardar los cambios
     wb.save(ruta_reporte)
-
     messagebox.showinfo("Éxito", f"El reporte ha sido descargado exitosamente en {ruta_reporte}")
 
 
 def descargar_reporte_pdf():
-    # Conexión a la base de datos usando la ruta obtenida
     db_path = get_database_path()
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
-    
-    # Obtener datos de la tabla 'productos'
-    cursor.execute("SELECT * FROM productos")
-    productos = cursor.fetchall()
-    columnas = [desc[0] for desc in cursor.description]
-    conn.close()
-    
+
+    # Validar existencia de la tabla 'productos'
+    cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='productos'")
+    if not cursor.fetchone():
+        conn.close()
+        messagebox.showerror("Error", "La tabla 'productos' no existe en la base de datos.")
+        return
+
+    # Obtener los datos
+    try:
+        cursor.execute("SELECT * FROM productos")
+        productos = cursor.fetchall()
+        conn.close()
+    except Exception as e:
+        conn.close()
+        messagebox.showerror("Error al consultar", str(e))
+        return
+
     if not productos:
         messagebox.showinfo("Sin datos", "No hay registros en la base de datos para exportar.")
         return
-    
-    # Crear la carpeta "Reporte" si no existe
+
+    columnas = ["ID", "Nombre", "Cantidad", "Unidad", "Precio"]
+
     ruta_carpeta_reporte = os.path.join(os.path.dirname(os.path.abspath(__file__)), "Reporte")
     os.makedirs(ruta_carpeta_reporte, exist_ok=True)
 
-    # Generar nombre de archivo con fecha y hora
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     fecha_actual = datetime.now().strftime("%d/%m/%y")
-    hora_actual = datetime.now().strftime("%H : %M : %S")
+    hora_actual = datetime.now().strftime("%H:%M:%S")
     ruta_reporte_pdf = os.path.join(ruta_carpeta_reporte, f"Reporte_Inventario-{timestamp}.pdf")
-    
-    # Crear el PDF
+
     pdf = FPDF()
     pdf.add_page()
     pdf.set_auto_page_break(auto=True, margin=15)
 
-    # Agregar el logo en la esquina superior derecha usando Pillow
-    ruta_logo = 'logo.png'  # Asegúrate de que esta ruta sea correcta
+    # Logo
+    ruta_logo = 'logo.png'
     if os.path.exists(ruta_logo):
         try:
-            # Abre el logo con Pillow y guarda una copia en un formato compatible si es necesario
-            logo_img = Image.open(ruta_logo)
-            logo_img = logo_img.convert("RGB")  # Convierte a RGB si es necesario
-            logo_img.save("temp_logo.jpg")  # Guarda una copia temporal en JPG
-            
-            # Agrega el logo al PDF
-            pdf.image("temp_logo.jpg", x=186, y=5, w=16)  # Ajusta x, y, y el ancho (w) según sea necesario
-            
-            # Elimina el archivo temporal después de usarlo
+            logo_img = Image.open(ruta_logo).convert("RGB")
+            logo_img.save("temp_logo.jpg")
+            pdf.image("temp_logo.jpg", x=186, y=5, w=16)
             os.remove("temp_logo.jpg")
         except Exception as e:
             messagebox.showerror("Error", f"No se pudo cargar el logo: {e}")
@@ -239,79 +263,72 @@ def descargar_reporte_pdf():
     pdf.cell(0, 10, "REPORTE DE INVENTARIO - RUPHA", ln=True, align="C")
     pdf.ln(5)
 
-    # Fecha y hora de creación
+    # Fecha y hora
     pdf.set_font("Arial", "", 10)
-    pdf.set_text_color(128, 128, 128)  # Color gris
-    pdf.cell(0, 10, f"Archivo creado: Fecha: {fecha_actual}         Hora: {hora_actual}", ln=True, align="C")
-    pdf.set_text_color(0, 0, 0)  # Restablece el color a negro para el resto del contenido
+    pdf.set_text_color(128, 128, 128)
+    pdf.cell(0, 10, f"Archivo creado: Fecha: {fecha_actual}    Hora: {hora_actual}", ln=True, align="C")
+    pdf.set_text_color(0, 0, 0)
     pdf.ln(10)
 
-    # Ajustes para tabla
+    # Tabla
     pdf.set_font("Arial", "B", 12)
-    max_table_width = 180
-    col_width = max_table_width / len(columnas)
-    table_start_x = (pdf.w - max_table_width) / 2
+    col_width = 180 / 5
+    row_height_default = 10
 
-    # Función auxiliar para calcular alto estimado de una celda
-    def get_cell_height(texto, col_width, font_size):
-        avg_char_per_line = col_width // (font_size * 0.4)
-        num_lines = max(1, int(len(str(texto)) / avg_char_per_line) + 1)
-        return num_lines * (font_size + 2)
+    def render_encabezados():
+        pdf.set_font("Arial", "B", 12)
+        for col in columnas:
+            pdf.cell(col_width, row_height_default, col, border=1, align='C')
+        pdf.ln(row_height_default)
+        pdf.set_font("Arial", "", 10)
 
-    # Encabezados
-    pdf.set_xy(table_start_x, pdf.get_y())
-    y_encabezado = pdf.get_y()
-    max_header_height = 0
+    render_encabezados()
 
-    for i, col in enumerate(columnas):
-        texto = str(col)
-        x = table_start_x + i * col_width
-        y = y_encabezado
-        pdf.set_xy(x, y)
-        pdf.multi_cell(col_width, 6, texto, border=1, align="C")
-        cell_height = get_cell_height(texto, col_width, 10)
-        max_header_height = max(max_header_height, cell_height)
-
-    pdf.set_y(y_encabezado + max_header_height)
-
-    # Cambiar fuente para los datos
-    pdf.set_font("Arial", "", 10)
-
-    # Dibujar cada fila
     for fila in productos:
+        # Orden: ID, Nombre, Cantidad, Unidad, Precio
+        id_ = str(fila[0])
+        nombre = str(fila[1])
+        cantidad = str(fila[2])
+        precio = f"{fila[3]:.2f}"
+        unidad = str(fila[4])
+
+        x_start = pdf.get_x()
         y_start = pdf.get_y()
-        cell_heights = []
 
-        # Calcular la altura que cada celda ocuparía
-        for i, item in enumerate(fila):
-            texto = str(item)
-            height = get_cell_height(texto, col_width, 10)
-            cell_heights.append(height)
+        # Altura del nombre
+        pdf.set_xy(x_start + col_width, y_start)
+        nombre_lines = pdf.multi_cell(col_width, 5, nombre, border=0, align='C', split_only=True)
+        row_height = max(len(nombre_lines) * 5, row_height_default)
 
-        max_row_height = max(cell_heights)
+        # Verificar salto de página
+        if y_start + row_height > pdf.h - 15:
+            pdf.add_page()
+            render_encabezados()
+            x_start = pdf.get_x()
+            y_start = pdf.get_y()
 
-        for i, item in enumerate(fila):
-            texto = str(item)
-            x = table_start_x + i * col_width
-            y = y_start
+        # Bordes manuales
+        for i in range(5):
+            pdf.rect(x_start + i * col_width, y_start, col_width, row_height)
 
-            # Guardar la posición actual
-            pdf.set_xy(x, y)
+        # Celdas
+        pdf.set_xy(x_start, y_start)
+        pdf.cell(col_width, row_height, id_, border=0, align='C')
 
-            # Dibujar el texto sin borde
-            pdf.multi_cell(col_width, 6, texto, border=0, align="C")
+        pdf.set_xy(x_start + col_width, y_start)
+        pdf.multi_cell(col_width, 5, nombre, border=0, align='C')
 
-            # Dibujar el borde de la celda completo
-            pdf.rect(x, y, col_width, max_row_height)
+        pdf.set_xy(x_start + col_width * 2, y_start)
+        pdf.cell(col_width, row_height, cantidad, border=0, align='C')
 
-            # Restaurar X para siguiente celda
-            pdf.set_xy(x + col_width, y)
+        pdf.set_xy(x_start + col_width * 3, y_start)
+        pdf.cell(col_width, row_height, unidad, border=0, align='C')
 
-        # Bajar al siguiente Y después de procesar toda la fila
-        pdf.set_y(y_start + max_row_height)
+        pdf.set_xy(x_start + col_width * 4, y_start)
+        pdf.cell(col_width, row_height, precio, border=0, align='C')
 
+        pdf.set_y(y_start + row_height)
 
-    # Guardar el archivo PDF
     try:
         pdf.output(ruta_reporte_pdf)
         messagebox.showinfo("Éxito", f"El reporte PDF ha sido descargado exitosamente en {ruta_reporte_pdf}")
