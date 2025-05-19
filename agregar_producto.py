@@ -21,7 +21,6 @@ cursor.execute('''CREATE TABLE IF NOT EXISTS productos (
                     precio REAL NOT NULL,
                     unidad TEXT)''')
 conn.commit()
-conn.close()
 
 # Función para crear el frame de inventario
 def crear_frame_inventario(root, frame_mostrar_inventario):
