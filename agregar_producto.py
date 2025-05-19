@@ -78,6 +78,7 @@ def crear_frame_inventario(root, frame_mostrar_inventario):
     entry_precio = tk.Entry(frame_inventario, width=30, font=("Arial", 16))
     entry_precio.grid(row=5, column=2, padx=(10, 20), ipady=10)
     productos_list = tk.Listbox(frame_inventario, width=80, height=10, bg="white")
+    productos_list.grid(row=8, column=1, columnspan=2, pady=10)
     # Botón para agregar producto
     tk.Button(
         frame_inventario,
