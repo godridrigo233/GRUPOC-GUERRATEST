@@ -1,4 +1,3 @@
-
 import pytest
 from tkinter import messagebox
 from unittest.mock import MagicMock, patch
