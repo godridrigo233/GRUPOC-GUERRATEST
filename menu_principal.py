@@ -66,7 +66,7 @@ def retroceder():
 
 
 # Configurar los botones
-btn_home = tk.Button(root, text="🏠", command=retroceder, font=("Arial", 40), borderwidth=0, bg="white")
+btn_home = tk.Button(root, text="⬅", command=retroceder, font=("Arial", 40), borderwidth=0, bg="white")
 
 btn_home.place(x=10, y=10)
 btn_home.bind("<Enter>", lambda e: btn_home.config(bg="lightgray"))
