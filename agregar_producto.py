@@ -53,7 +53,7 @@ def crear_frame_inventario(root, frame_mostrar_inventario):
         print(f"Error al cargar el logo: {e}")
 
     # Título del inventario
-    titulo = tk.Label(frame_inventario, text="¡BIEVENIDO!\n AGREGA TU PRODUCTO", font=("Arial", 38, "bold"), pady=20, bg="white")
+    titulo = tk.Label(frame_inventario, text="¡BIENVENIDO!\n AGREGA TU PRODUCTO", font=("Arial", 38, "bold"), pady=20, bg="white")
     titulo.grid(row=1, column=1, columnspan=2, sticky="nsew")
 
     # Campos de entrada en el orden deseado
@@ -77,14 +77,13 @@ def crear_frame_inventario(root, frame_mostrar_inventario):
     tk.Label(frame_inventario, text="PRECIO", font=("Arial", 15, "bold"), bg="white").grid(row=5, column=1, sticky="e")
     entry_precio = tk.Entry(frame_inventario, width=30, font=("Arial", 16))
     entry_precio.grid(row=5, column=2, padx=(10, 20), ipady=10)
-
+    productos_list = tk.Listbox(frame_inventario, width=80, height=10, bg="white")
     # Botón para agregar producto
     tk.Button(
         frame_inventario,
         text="Agregar producto",
         command=lambda: agregar_producto(entry_nombre, entry_cantidad, entry_precio, unidad_var, productos_list, frame_mostrar_inventario, mensaje_label),
         bg="orange",
-        fg="black",
         font=("Arial", 20, "bold")
     ).grid(row=6, column=1, columnspan=2, padx=(50, 5), pady=20, ipadx=30, ipady=10, sticky="ew")
 
@@ -93,7 +92,6 @@ def crear_frame_inventario(root, frame_mostrar_inventario):
     mensaje_label.grid(row=7, column=1, columnspan=2, pady=20)
 
     # Lista de productos (opcional)
-    productos_list = tk.Listbox(frame_inventario, width=80, height=10, bg="white")
     actualizar_lista_productos(productos_list)
 
     return frame_inventario
@@ -114,6 +112,7 @@ def agregar_producto(entry_nombre, entry_cantidad, entry_precio, unidad_var, pro
     if not nombre or not cantidad or not precio:
         messagebox.showerror("Error", "Todos los campos son obligatorios.")
         return
+
     # Validación nueva: nombre no debe exceder los 31 caracteres
     if len(nombre) > 31:
         messagebox.showerror("Error", "El nombre no debe exceder los 31 caracteres.")
@@ -125,13 +124,29 @@ def agregar_producto(entry_nombre, entry_cantidad, entry_precio, unidad_var, pro
         return
 
     try:
+        # Validar que la cantidad sea un número
+        try:
+            cantidad_valor = float(cantidad)
+        except ValueError:
+            messagebox.showerror("Error", "La cantidad ingresada no es un número válido.")
+            return
+
+        # Validar que el precio sea un número
+        try:
+            precio_valor = float(precio)
+        except ValueError:
+            messagebox.showerror("Error", "El precio ingresado no es un número válido.")
+            return
+        
+        
         # Convertir cantidad y precio a valores numéricos
         if unidad == "Metros":
-            cantidad = round(float(cantidad),2)
+            cantidad = float(cantidad)
         else:
-            cantidad = round(float(cantidad),3)
+            cantidad = float(cantidad)
 
         precio = round(float(precio), 2)
+
 
         # Verificar que cantidad y precio sean positivos
         if cantidad <= 0:
@@ -142,8 +157,19 @@ def agregar_producto(entry_nombre, entry_cantidad, entry_precio, unidad_var, pro
             messagebox.showerror("Error", "El precio debe ser un monto positivo.")
             return
 
-        if cantidad % 1 != 0 and unidad=="Unidades" :
-            messagebox.showerror("Error", "No se admiten valores decimales para unidad de medida: Unidades.");
+        # Nueva validación: cantidad no debe ser mayor a 1000
+        if cantidad > 1000:
+            messagebox.showerror("Error", "La cantidad no puede ser mayor a 1000.")
+            return
+
+        # Nueva validación: precio no debe ser mayor a 1000
+        if precio > 1000:
+            messagebox.showerror("Error", "El precio no puede ser mayor a 1000.")
+            return
+
+        # Validar decimales para unidades
+        if cantidad % 1 != 0 and unidad == "Unidades":
+            messagebox.showerror("Error", "No se admiten valores decimales para unidad de medida: Unidades.")
             return
 
         # Verificar si el producto ya existe en la base de datos
@@ -163,15 +189,15 @@ def agregar_producto(entry_nombre, entry_cantidad, entry_precio, unidad_var, pro
         # Mostrar mensaje temporal de éxito
         mensaje_label.config(text="¡Producto agregado!", bg="green", fg="white", font=("Arial", 35, "bold"))
         mensaje_label.after(3200, lambda: mensaje_label.config(text="", bg="white"))
-
         # Limpiar los campos después de agregar el producto
         entry_nombre.delete(0, tk.END)
         entry_cantidad.delete(0, tk.END)
         entry_precio.delete(0, tk.END)
         unidad_var.set("Selecciona tu unidad")
-        
-    except ValueError:
-        messagebox.showerror("Error", "Cantidad y precio deben ser números.")
+    
+    except Exception as e:
+        messagebox.showerror("Error inesperado", f"Ocurrió un error: {str(e)}")
+
 
 # Función para configurar el botón "Volver"
 def configurar_boton_volver(frame_inventario, comando_volver):

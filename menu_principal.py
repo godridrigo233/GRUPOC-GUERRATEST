@@ -1,10 +1,10 @@
 import tkinter as tk
-from PIL import Image, ImageTk
+from PIL import Image, ImageTk # type: ignore
 import os
 import agregar_producto  # Importa el archivo para agregar productos
 import mostrar_inventario  # Importa el archivo para mostrar el inventario
 import descargar_reporte  # Importa el archivo de descargar reporte
-
+import tkinter.messagebox as messagebox
 # Ventana principal
 root = tk.Tk()
 root.title("Menú Principal - Ferretería RUPHA")
@@ -14,7 +14,7 @@ root.state("zoomed")  # Maximiza la ventana
 # Frame del menú principal
 frame_menu = tk.Frame(root, bg="white")  # Fondo blanco opcional para el frame principal
 frame_menu.pack(fill="both", expand=True)
-
+    
 # Ruta al archivo .ico
 ruta_icono = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'icono_empresa.ico')
 if os.path.exists(ruta_icono):
@@ -58,7 +58,11 @@ def volver_menu_principal():
 
 # Función para retroceder
 def retroceder():
-    volver_menu_principal()  # Vuelve al menú principal
+    # Si el frame menú ya está visible, mostrar mensaje
+    if frame_menu.winfo_ismapped():
+        messagebox.showinfo("Información", "Ya estás en el menú principal.")
+    else:
+        volver_menu_principal()  # Vuelve al menú principal
 
 
 # Configurar los botones
