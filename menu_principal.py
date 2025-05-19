@@ -5,11 +5,18 @@ import agregar_producto  # Importa el archivo para agregar productos
 import mostrar_inventario  # Importa el archivo para mostrar el inventario
 import descargar_reporte  # Importa el archivo de descargar reporte
 import tkinter.messagebox as messagebox
+
+def centrar_ventana(root, ancho, alto):
+    pantalla_ancho = root.winfo_screenwidth()
+    pantalla_alto = root.winfo_screenheight()
+    x = int((pantalla_ancho - ancho) / 2)
+    y = int((pantalla_alto - alto) / 2)
+    root.geometry(f"{ancho}x{alto}+{x}+{y}")
 # Ventana principal
 root = tk.Tk()
 root.title("Menú Principal - Ferretería RUPHA")
-root.geometry("800x800")
-root.state("zoomed")  # Maximiza la ventana
+root.resizable(False, False)
+centrar_ventana(root, 1400, 850)
 
 # Frame del menú principal
 frame_menu = tk.Frame(root, bg="white")  # Fondo blanco opcional para el frame principal
