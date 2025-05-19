@@ -1,0 +1,15 @@
+Software para gestión de Inventario de Ferretería
+
+Antes de abrirlo se debe tener instalado python y las siguientes librerías:
+- Tkinter
+- Pandas
+- Pillow
+- fpdf
+- OpenPyXL
+
+Tras tener el código importado del repositorio se debe entrar en la carpeta correspondiente y ejecutar:
+python menu_principal.py
+
+Con esto el programa funcionará correctamente.
+
+Nota: Los reportes que se generen serán descargados en la carpeta Reporte.
