@@ -7,6 +7,7 @@ Antes de abrirlo se debe tener instalado python y las siguientes librerías:
 - fpdf
 - OpenPyXL
 Tkinter ya viene incluido en la instalación de Python. Sin embargo el resto de librerías no y se debe ejecutar este comando:
+
 pip install pandas pillow fpdf openpyxl
 
 Tras tener el código importado del repositorio se debe entrar en la carpeta correspondiente y ejecutar:
